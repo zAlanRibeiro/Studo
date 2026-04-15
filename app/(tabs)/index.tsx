@@ -1,4 +1,4 @@
-import { useClassroomData } from '@/scripts/hooks/useClassroomData';
+import { useClassroomData } from '@/src/hooks/useClassroomData';
 import React, { useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
