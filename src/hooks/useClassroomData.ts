@@ -1,8 +1,9 @@
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
-import { debugCheckDatabase, syncTasksToDb } from '../data/databaseService';
+import { processGamification } from '../services/gamificationService';
 import { getActiveCourses, getCourseWorks, getStudentSubmissions, GoogleCourseWork } from '../services/googleClassroom';
+import { saveTasksToStorage } from '../services/persistenceService';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -165,16 +166,6 @@ export function useClassroomData(): UseClassroomDataReturn {
                     allProcessedTasks.push(...processed);
                 });
 
-                try {
-                // Chamamos a função que você criou no databaseService
-                await syncTasksToDb(allProcessedTasks);
-                await syncTasksToDb(allProcessedTasks);
-                await debugCheckDatabase();
-                console.log('O | Banco local sincronizado!');
-            } catch (dbError) {
-                console.error('X | Falha ao sincronizar SQLite:', dbError);
-            }
-
                 allProcessedTasks.sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime());
                 setTasks(allProcessedTasks);
             } catch (error) {
@@ -188,6 +179,22 @@ export function useClassroomData(): UseClassroomDataReturn {
             }
         }, []
     );
+
+    useEffect(() => {
+        if (tasks.length > 0) {
+            saveTasksToStorage(tasks).catch((err) =>
+                console.error('Falha ao persistir tarefas:', err)
+            );
+        }
+    }, [tasks]);
+
+    useEffect(() => {
+        if (tasks.length > 0) {
+            saveTasksToStorage(tasks)
+                .then(() => processGamification())
+                .catch((err) => console.error('Falha ao processar gamificação:', err));
+        }
+    }, [tasks]);
 
     useEffect(() => {
         if (accessToken) {
