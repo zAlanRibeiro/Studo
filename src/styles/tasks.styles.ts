@@ -5,35 +5,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  loginScreen: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  logo: {
-    fontSize: 50,
-    fontWeight: 'bold',
-    color: '#4A80F0',
-    fontStyle: 'italic',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 40,
-  },
-  loginBtn: {
-    backgroundColor: '#4A80F0',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    elevation: 5,
-  },
-  loginBtnText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
   content: {
     flex: 1,
   },
@@ -41,14 +12,15 @@ export const styles = StyleSheet.create({
     backgroundColor: '#4A80F0',
     paddingTop: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    paddingBottom: 8,
   },
   headerTitle: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -63,7 +35,7 @@ export const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: 'white',
+    borderBottomColor: '#FFFFFF',
   },
   tabText: {
     color: 'rgba(255,255,255,0.6)',
@@ -71,7 +43,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   activeTabText: {
-    color: 'white',
+    color: '#FFFFFF',
   },
   center: {
     flex: 1,
@@ -85,7 +57,7 @@ export const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 15,
     marginBottom: 15,

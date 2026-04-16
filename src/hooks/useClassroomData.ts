@@ -28,6 +28,9 @@ const GOOGLE_CLIENT_IDS = {
 };
 
 const SCOPES = [
+    'openid',
+    'profile',
+    'email',
     'https://www.googleapis.com/auth/classroom.courses.readonly',
     'https://www.googleapis.com/auth/classroom.coursework.me.readonly'
 ];
