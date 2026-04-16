@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useClassroomDataContext } from '../../src/contexts/ClassroomDataContext';
+import { getGoogleUserProfile, GoogleUserProfile } from '../../src/services/googleClassroom';
 import { styles } from '../../src/styles/tasks.styles';
 
 export default function TasksPage() {
@@ -9,11 +10,14 @@ export default function TasksPage() {
   const {
     isAuthenticated,
     isLoadingAuth,
+    accessToken,
     tasks,
     isLoading,
     isRefreshing,
     refresh,
   } = useClassroomDataContext();
+
+  const [profile, setProfile] = useState<GoogleUserProfile | null>(null);
 
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated) {
@@ -21,37 +25,83 @@ export default function TasksPage() {
     }
   }, [isAuthenticated, isLoadingAuth, router]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      if (!accessToken) {
+        if (isMounted) setProfile(null);
+        return;
+      }
+
+      try {
+        const user = await getGoogleUserProfile(accessToken);
+        if (isMounted) {
+          setProfile(user);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar perfil na tela de tarefas:', error);
+        if (isMounted) {
+          setProfile(null);
+        }
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken]);
+
   const [activeTab, setActiveTab] = useState<'todo' | 'done'>('todo');
+  const [dateFilter, setDateFilter] = useState<'all' | 'week' | 'nextWeek'>('all');
 
-  const displayedTasks = tasks.filter((task) =>
-    activeTab === 'todo' ? !task.isCompleted && !task.isExpired : task.isCompleted || task.isExpired
-  );
+  const now = new Date();
+  const completedCount = tasks.filter((task) => task.isCompleted).length;
+  const totalTasksCount = tasks.length;
+  const completionPercent = totalTasksCount > 0 ? Math.round((completedCount / totalTasksCount) * 100) : 0;
+  const todayLabel = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' }).format(now);
 
-  const getCardStyle = (item: (typeof tasks)[number]) => {
-    if (item.isCompleted) return styles.cardCompleted;
-    if (item.isExpired) return styles.cardExpired;
-    if (item.urgency === 'red') return styles.cardUrgent;
-    if (item.urgency === 'yellow') return styles.cardWarning;
-    if (item.urgency === 'green') return styles.cardSafe;
-    return null;
+  const displayedTasks = tasks
+    .filter((task) => (activeTab === 'todo' ? !task.isCompleted && !task.isExpired : task.isCompleted || task.isExpired))
+    .filter((task) => {
+      if (dateFilter === 'all') return true;
+      if (!task.rawDate) return false;
+
+      const diffInDays = (task.rawDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (dateFilter === 'week') return diffInDays >= 0 && diffInDays <= 7;
+      return diffInDays > 7 && diffInDays <= 14;
+    });
+
+  const getCardAccentStyle = (item: (typeof tasks)[number]) => {
+    if (item.isCompleted) return styles.accentCompleted;
+    if (item.isExpired) return styles.accentExpired;
+    if (item.urgency === 'red') return styles.accentUrgent;
+    if (item.urgency === 'yellow') return styles.accentWarning;
+    if (item.urgency === 'green') return styles.accentSafe;
+    return styles.accentDefault;
   };
 
-  const getBadgeStyle = (item: (typeof tasks)[number]) => {
-    if (item.isCompleted) return styles.badgeCompleted;
-    if (item.isExpired) return styles.badgeExpired;
-    if (item.urgency === 'red') return styles.badgeUrgent;
-    if (item.urgency === 'yellow') return styles.badgeWarning;
-    if (item.urgency === 'green') return styles.badgeSafe;
-    return null;
+  const isTomorrow = (targetDate: Date) => {
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const target = new Date(targetDate);
+    target.setHours(0, 0, 0, 0);
+
+    return target.getTime() === tomorrow.getTime();
   };
 
-  const getTextStyle = (item: (typeof tasks)[number]) => {
-    if (item.isCompleted) return styles.textCompleted;
-    if (item.isExpired) return styles.textExpired;
-    if (item.urgency === 'red') return styles.textUrgent;
-    if (item.urgency === 'yellow') return styles.textWarning;
-    if (item.urgency === 'green') return styles.textSafe;
-    return null;
+  const getDeadlineLabel = (item: (typeof tasks)[number]) => {
+    if (item.isCompleted) return 'Concluida';
+    if (item.isVeryOld) return 'Antiga (Expirada)';
+    if (item.isExpired) return 'Prazo expirado';
+    if (item.rawDate && isTomorrow(item.rawDate)) return 'Amanhã';
+    return item.deadlineLabel || 'Sem prazo';
   };
 
   if (!isAuthenticated) {
@@ -63,80 +113,113 @@ export default function TasksPage() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Minhas Atividades</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={refresh}
+          colors={['#4A80F0']}
+          tintColor={'#4A80F0'}
+        />
+      }
+    >
+      <Text style={styles.dateLabel}>{todayLabel}</Text>
 
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'todo' && styles.activeTab]}
-              onPress={() => setActiveTab('todo')}
-            >
-              <Text style={[styles.tabText, activeTab === 'todo' && styles.activeTabText]}>A Fazer</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'done' && styles.activeTab]}
-              onPress={() => setActiveTab('done')}
-            >
-              <Text style={[styles.tabText, activeTab === 'done' && styles.activeTabText]}>Histórico</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#4A80F0" />
-            <Text style={styles.loadingText}>Sincronizando...</Text>
-          </View>
+      <View style={styles.progressCard}>
+        {profile?.picture ? (
+          <Image source={{ uri: profile.picture }} style={styles.profileAvatar} />
         ) : (
-          <ScrollView
-            contentContainerStyle={styles.taskList}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={refresh}
-                colors={['#4A80F0']}
-                tintColor={'#4A80F0'}
-              />
-            }
-          >
-            {displayedTasks.length > 0 ? (
-              displayedTasks.map((item) => (
-                <View key={item.id} style={[styles.card, getCardStyle(item)]}>
-                  <View style={styles.cardHeader}>
-                    <View style={[styles.materiaBadge, getBadgeStyle(item)]}>
-                      <Text style={[styles.materiaText, getTextStyle(item)]}>{item.materia}</Text>
-                    </View>
-
-                    <Text style={[styles.deadlineText, getTextStyle(item)]}>
-                      {item.isCompleted
-                        ? 'Concluído'
-                        : item.isVeryOld
-                          ? 'Antiga (Expirada)'
-                          : item.isExpired
-                            ? 'Prazo Expirado'
-                            : `Prazo: ${item.deadlineLabel || 'Sem prazo'}`}
-                    </Text>
-                  </View>
-
-                  <Text style={[styles.taskTitle, getTextStyle(item)]}>{item.title}</Text>
-
-                  <Text style={styles.taskDesc} numberOfLines={2}>
-                    {item.description}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyEmoji}>{activeTab === 'done' ? '📂' : '🎉'}</Text>
-                <Text style={styles.emptyText}>Nada por aqui!</Text>
-              </View>
-            )}
-          </ScrollView>
+          <View style={[styles.profileAvatar, styles.profileAvatarFallback]}>
+            <Text style={styles.profileAvatarInitial}>{profile?.name?.[0] ?? 'U'}</Text>
+          </View>
         )}
+
+        <View style={styles.progressInfoWrap}>
+          <Text style={styles.progressTitle}>Progresso semanal</Text>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${completionPercent}%` }]} />
+          </View>
+          <Text style={styles.progressMeta}>
+            {completionPercent}% concluídas ({completedCount} concluídas / {totalTasksCount} total)
+          </Text>
+        </View>
       </View>
-    </View>
+
+      <Text style={styles.sectionTitle}>Tarefas</Text>
+
+      <View style={styles.statusTabsWrap}>
+        <TouchableOpacity
+          style={[styles.statusTab, activeTab === 'todo' && styles.statusTabActive]}
+          onPress={() => setActiveTab('todo')}
+        >
+          <Text style={[styles.statusTabText, activeTab === 'todo' && styles.statusTabTextActive]}>A fazer</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.statusTab, activeTab === 'done' && styles.statusTabActive]}
+          onPress={() => setActiveTab('done')}
+        >
+          <Text style={[styles.statusTabText, activeTab === 'done' && styles.statusTabTextActive]}>Concluidas</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.quickFilterRow}>
+        <TouchableOpacity
+          style={[styles.quickFilterChip, dateFilter === 'all' && styles.quickFilterChipActive]}
+          onPress={() => setDateFilter('all')}
+        >
+          <Text style={[styles.quickFilterText, dateFilter === 'all' && styles.quickFilterTextActive]}>Todas</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickFilterChip, dateFilter === 'week' && styles.quickFilterChipActive]}
+          onPress={() => setDateFilter('week')}
+        >
+          <Text style={[styles.quickFilterText, dateFilter === 'week' && styles.quickFilterTextActive]}>Essa semana</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickFilterChip, dateFilter === 'nextWeek' && styles.quickFilterChipActive]}
+          onPress={() => setDateFilter('nextWeek')}
+        >
+          <Text style={[styles.quickFilterText, dateFilter === 'nextWeek' && styles.quickFilterTextActive]}>Proxima semana</Text>
+        </TouchableOpacity>
+      </View>
+
+      {isLoading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#4A80F0" />
+          <Text style={styles.loadingText}>Sincronizando...</Text>
+        </View>
+      ) : displayedTasks.length > 0 ? (
+        <View style={styles.tasksListWrap}>
+          {displayedTasks.map((item) => (
+            <View key={item.id} style={styles.taskCard}>
+              <View style={[styles.taskCardAccent, getCardAccentStyle(item)]}>
+                <Text style={styles.taskCardAccentTitle}>{item.title}</Text>
+              </View>
+
+              <View style={styles.taskCardBody}>
+                <Text style={styles.taskDescription} numberOfLines={2} ellipsizeMode="tail">
+                  {item.description}
+                </Text>
+
+                <View style={styles.taskMetaRow}>
+                  <Text style={styles.taskMetaText}>Prazo: {getDeadlineLabel(item)}</Text>
+                  <Text style={styles.taskMetaText}>Materia: {item.materia}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>{activeTab === 'done' ? '📂' : '🎉'}</Text>
+          <Text style={styles.emptyText}>Nada por aqui!</Text>
+        </View>
+      )}
+    </ScrollView>
   );
 }
