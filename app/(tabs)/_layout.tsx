@@ -48,6 +48,12 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="atestados"
+        options={{
+          tabBarIcon: ({ color, size }) => <Ionicons name="medical-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,

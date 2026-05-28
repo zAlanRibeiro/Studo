@@ -1,5 +1,6 @@
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { processGamification } from '../services/gamificationService';
 import { getActiveCourses, getCourseWorks, getStudentSubmissions, GoogleCourseWork } from '../services/googleClassroom';
@@ -102,13 +103,10 @@ interface UseClassroomDataReturn {
     accessToken: string | null;
     promptAsync: () => void;
     isLoadingAuth: boolean;
-
-    // Dados
     tasks: ProcessedTask[];
     isLoading: boolean;
     isRefreshing: boolean;
 
-    // Ações
     refresh: () => Promise<void>;
     logout: () => void;
 }
@@ -120,10 +118,14 @@ export function useClassroomData(): UseClassroomDataReturn {
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
+    const isWeb = Platform.OS === 'web';
+    const redirectUri = isWeb ? 'http://localhost:8081' : 'https://auth.expo.io/@zalanribeiro/studo';
+
     const [request, response, promptAsync] = Google.useAuthRequest({
         ...GOOGLE_CLIENT_IDS,
         extraParams: { prompt: 'select_account' },
         scopes: SCOPES,
+        redirectUri,
     });
 
     useEffect(() => {
@@ -216,10 +218,14 @@ export function useClassroomData(): UseClassroomDataReturn {
         setTasks([]);
     }, []);
 
+    const loginAsync = useCallback(() => {
+        promptAsync(isWeb ? {} : { useProxy: true });
+    }, [promptAsync, isWeb]);
+
     return {
         isAuthenticated: !!accessToken,
         accessToken,
-        promptAsync,
+        promptAsync: loginAsync,
         isLoadingAuth: !request,
 
         tasks,

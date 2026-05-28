@@ -33,12 +33,24 @@ export interface StoredUserBadge {
     earned_at: string;
 }
 
+export interface StoredAtestado {
+    id: string;
+    titulo: string;
+    medico: string;
+    crm?: string;
+    data: string;
+    descricao?: string;
+    imageUri?: string;
+    created_at: string;
+}
+
 export interface AppStorageData {
     tasks: StoredTask[];
     peers: StoredPeer[];
     taskPeers: StoredTaskPeer[];
     badges: StoredBadge[];
     userBadges: StoredUserBadge[];
+    atestados: StoredAtestado[];
 }
 
 export interface Metrics {
