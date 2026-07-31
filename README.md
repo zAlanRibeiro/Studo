@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
+# Studo - sua vida acadêmica organizada
+  
+![React Native](https://img.shields.io/badge/react-native?style=for-the-badge&logo=react&color=blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Expo](https://img.shields.io/badge/expo-000020?style=for-the-badge&logo=expo&color=blue)
+![Node.js](https://img.shields.io/badge/Node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white&color=blue)
+![Google Classroom API](https://img.shields.io/badge/google-classroom?style=for-the-badge&logo=Google%20Classroom&logoColor=white&color=blue)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+> Aplicativo mobile de gerenciamento gameficado de atividades do Google Classroom.
 
-1. Install dependencies
+## Funcionalidades  
+- **Integração com o Google Classroom** onde logo ao acessar o app com o email é puxado as informações das salas e tarefas vinculadas a sua conta do Google.
+- **Filtagem de tarefas** por status e por prazo. 
+- **Medalhas e níveis por conta** ganhados conforme as tarefas são entregues.
+- **Calendário** com visualização das tarefas do mês e do dia.
 
-   ```bash
-   npm install
-   ```
+## Tecnologias
+### Aplicativo (Mobile)
+- [React Native](https://reactnative.dev) - Framework mobile.
+- [Expo](https://expo.dev/) - Ambiente de desenvolvimento.
+- [TypeScript](https://typescriptlang.org) - Linguagem de programação
 
-2. Start the app
+### Backend e serviços
+- [Node.js](https://nodejs.org/pt-br) - Servidor do projeto
+- [Google Classroom API](https://developers.google.com/workspace/classroom?hl=pt-br) - Integração com as turmas e atividades.
 
-   ```bash
-   npx expo start
-   ```
 
-In the output, you'll find options to open the app in a
+## Como rodar o projeto localmente
+1. Clonar o projeto
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+~~~bash  
+  git clone https://github.com/Snoopynha/Stellar-Legacy.git
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+  # Acesse a pasta do projeto
+  cd stellar-legacy
+~~~
 
-## Get a fresh project
+2. Instalar as dependências 
 
-When you're ready, run:
+~~~bash  
+  npm install
+~~~
 
-```bash
-npm run reset-project
-```
+3. Iniciar o projeto (Expo)
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+~~~bash  
+  npm run start
+~~~  
 
-## Learn more
+4. Visualizar o aplicativo
 
-To learn more about developing your project with Expo, look at the following resources:
+Após iniciar o servidor, você pode testar o projeto de duas formas:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+* **Pelo celular (QR Code):** Abra o aplicativo **Expo Go** no seu smartphone e escaneie o QR Code exibido no terminal.
+* **Pelo navegador:** Pressione a tecla **`w`** diretamente no seu terminal para abrir a versão web do aplicativo.
 
-## Join the community
+## Licença
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/) 
